@@ -1,4 +1,3 @@
-
 # wmbusmeters
 
 The program acquires utility meter readings from wired m-bus or
@@ -6,7 +5,7 @@ wireless wm-bus meters.  The readings can then be published using
 MQTT, curled to a REST api, inserted into a database or stored in a
 log file.
 
-# What does it do?
+## What does it do?
 
 Wmbusmeters converts incoming telegrams from (w)mbus/OMS compatible meters like:
 `1844AE4C4455223368077A55000000_041389E20100023B0000`
@@ -33,8 +32,11 @@ or into json:
 Wmbusmeters can collect telegrams from radio using hardware dongles or rtl-sdr software radio dongles,
 or from m-bus meters using serial ports, or from files/pipes.
 
-[FAQ/WIKI/MANUAL pages](https://wmbusmeters.github.io/wmbusmeters-wiki/)
+## Where to find help?
+- [FAQ/WIKI/MANUAL pages](https://wmbusmeters.github.io/wmbusmeters-wiki/)
+- Github [Discussions](https://github.com/orgs/wmbusmeters/discussions)
 
+# Installation
 The program runs on GNU/Linux, MacOSX, FreeBSD, and Raspberry Pi.
 
 | System       | Status        |
@@ -44,7 +46,7 @@ The program runs on GNU/Linux, MacOSX, FreeBSD, and Raspberry Pi.
 | Docker | [![Build Docker Status](https://github.com/wmbusmeters/wmbusmeters/workflows/Build%20docker/badge.svg)](https://hub.docker.com/r/wmbusmeters/wmbusmeters/)|
 | Snap | [![Build Snap Status](https://github.com/wmbusmeters/wmbusmeters/workflows/Build%20Snap/badge.svg)](https://snapcraft.io/wmbusmeters)|
 
-# Distributions
+## Distributions
 
 **wmbusmeters** package is available on [Fedora](https://src.fedoraproject.org/rpms/wmbusmeters) _(version 31 or newer)_ and can be simply installed by using:
 
@@ -54,34 +56,115 @@ dnf install wmbusmeters
 
 **wmbusmeters** for [Debian](https://tracker.debian.org/pkg/wmbusmeters) is currently available through Experimental repositories. Availability for other Linux distributions can be checked on [release-monitoring](https://release-monitoring.org/project/88654/) project page.
 
-# Docker
+## Docker
 
 Experimental docker containers are available here: https://hub.docker.com/r/wmbusmeters/wmbusmeters
 
-# Snap
+## Snap
 
 Experimental snaps are available here: https://snapcraft.io/wmbusmeters
 Read the wiki for more info on how to use the snap: https://wmbusmeters.github.io/wmbusmeters-wiki/SNAP.html
 
-# Build from source and run as a daemon
+## Build from source and run as a daemon
 
 Building and installing from source is easy and recommended since the
 development progresses quickly.  First remove the wmbus dongle
 (im871a,amb8465(metis),amb3665,cul,rc1180) or the generic rtlsdr dongle (RTL2832U)
 from your computer. Then do:
 
-`./configure; make; sudo make install` will install wmbusmeters as a daemon.
+`./configure; make; sudo make install` This will build wmbusmeters from source and install it as a daemon.
+(Note! `make install` only works for GNU/Linux. For MacOSX try to start `wmbusmetersd /tmp/thepidfile` from a script instead.)
+
+To have the wmbusmeters daemon start automatically when the computer boots do:
+`sudo systemctl enable wmbusmeters`
+
+You can also start the daemon with another set of config files:
+`wmbusmetersd --useconfig=/home/me/.config/wmbusmeters /tmp/thepidfile`
+
 
 # Usage
 
-Check the contents of your `/etc/wmbusmeters.conf` file, assuming it
-has `device=auto:t1` and you are using a im871a,amb8465(metis),amb3665,rc1180,cul or rtlsdr device,
-then you can now start the daemon with `sudo systemctl start wmbusmeters`
-or you can try it from the command line `wmbusmeters auto:t1`
+## Running without config files, good for experimentation and test
+
+```
+wmbusmeters version: 1.15.0
+Usage: wmbusmeters {options} [device] { [meter_name] [meter_driver] [meter_id] [meter_key] }*
+       wmbusmeters {options} [hex]    { [meter_name] [meter_driver] [meter_id] [meter_key] }*
+       wmbusmetersd {options} [pid_file]
+
+As {options} you can use:
+
+    --alarmexpectedactivity=mon-fri(08-17),sat-sun(09-12) Specify when the timeout is tested, default is mon-sun(00-23)
+    --alarmshell=<cmdline> invokes cmdline when an alarm triggers
+    --alarmtimeout=<time> Expect a telegram to arrive within <time> seconds, eg 60s, 60m, 24h during expected activity.
+    --analyze Analyze a telegram to find the best driver.
+    --analyze=<key> Analyze a telegram to find the best driver use the provided decryption key.
+    --analyze=<driver> Analyze a telegram and use only this driver.
+    --analyze=<driver>:<key> Analyze a telegram and use only this driver with this key.
+    --calculate_field_unit='...' Add field_unit to the json and calculate it using the formula. E.g.
+    --calculate_sumtemp_c='external_temperature_c+flow_temperature_c'
+    --calculate_flow_f=flow_temperature_c
+    --debug for a lot of information
+    --donotprobe=<tty> do not auto-probe this tty. Use multiple times for several ttys or specify "all" for all ttys.
+    --driver=<file> load a driver
+    --driversdir=<dir> load all drivers in dir
+    --exitafter=<time> exit program after time, eg 20h, 10m 5s
+    --format=<hr/json/fields> for human readable, json or semicolon separated fields
+    --help list all options
+    --identitymode=(id|id-mfct|full|none) group meter state based on the identity mode. Default is id.
+    --ignoreduplicates=<bool> ignore duplicate telegrams, remember the last 10 telegrams
+    --field_xxx=yyy always add "xxx"="yyy" to the json output and add shell env METER_xxx=yyy (--json_xxx=yyy also works)
+    --license print GPLv3+ license
+    --listento=<mode> listen to one of the c1,t1,s1,s1m,n1a-n1f link modes
+    --listento=<mode>,<mode> listen to more than one link mode at the same time, assuming the dongle supports it
+    --listenvs=<meter_driver> list the env variables available for the given meter driver
+    --listfields=<meter_driver> list the fields selectable for the given meter driver
+    --listmeters list all meter drivers
+    --listmeters=<search> list all meter drivers containing the text <search>
+    --listunits list all unit suffixes that can be used for typing values
+    --logfile=<file> use this file for logging or --logfile=syslog
+    --logtelegrams log the contents of the telegrams for easy replay
+    --logtimestamps=<when> add log timestamps: always never important
+    --meterfiles=<dir> store meter readings in dir
+    --meterfilesaction=(overwrite|append) overwrite or append to the meter readings file
+    --meterfilesnaming=(name|id|name-id) the meter file is the meter's: name, id or name-id
+    --meterfilestimestamp=(never|day|hour|minute|micros) the meter file is suffixed with a
+                          timestamp (localtime) with the given resolution.
+    --metershell=<cmdline> invokes cmdline with env variables the first time a meter is seen since startup
+    --nodeviceexit if no wmbus devices are found, then exit immediately
+    --normal for normal logging
+    --oneshot wait for an update from each meter, then quit
+    --overridedevice=<device> override device in config files. Use only in combination with --useconfig= option
+    --ppjson pretty print the json
+    --pollinterval=<time> time between polling of meters, must be set to get polling.
+    --resetafter=<time> reset the wmbus dongle regularly, default is 23h
+    --selectfields=id,timestamp,total_m3 select only these fields to be printed (--listfields=<meter> to list available fields)
+    --separator=<c> change field separator to c
+    --shell=<cmdline> invokes cmdline with env variables containing the latest reading
+    --silent do not print informational messages nor warnings
+    --trace for tons of information
+    --useconfig=<dir> load config <dir>/wmbusmeters.conf and meters from <dir>/wmbusmeters.d
+    --usestderr write notices/debug/verbose and other logging output to stderr (the default)
+    --usestdoutforlogging write debug/verbose and logging output to stdout
+    --verbose for more information
+    --version print version
+```
+
+## How to specify the radio device for wmbusmeters
 
 Wmbusmeters will scan for wmbus devices every few seconds and detect whenever
 a device is plugged in or removed. However since wmbusmeters now supports
 several dongle types, the scan can take some time!
+
+As device you can use:
+
+`auto:c1`, to have wmbusmeters probe for devices: im871a, amb8465(metis), amb3665, cul, rc1180 or rtlsdr (spawns rtlwmbus).
+
+`im871a:c1` to start all connected *im871a* devices in *c1* mode, ignore all other devices.
+
+`/dev/ttyUSB1:amb8465:c1` to start only this device on this tty. Do not probe for other devices.
+
+(Note that a plain `/dev/ttyUSB0` no longer works, you have to specify the device expected on the device.)
 
 Use `auto` for testing and to find your dongle. For production it is very much
 recommended that you change `auto:t1` to the device name with the full device path
@@ -100,16 +183,131 @@ If you have to scan serial devices, then remember that some Raspberry PIs are up
 random data is sent to `/dev/ttyAMA0` when it is configured in bluetooth mode.
 To solve this, add `donotprobe=/dev/ttyAMA0`
 
-To have the wmbusmeters daemon start automatically when the computer boots do:
-`sudo systemctl enable wmbusmeters`
 
-You can trigger a reload of the config files with `sudo killall -HUP wmbusmetersd`
+### Device specific settings
+#### im871a
 
-(Note! make install only works for GNU/Linux. For MacOSX try to start
-`wmbusmetersd /tmp/thepidfile` from a script instead.)
+If you have two im871a you can supply both of them with their unique id:s and set different listening modes:
+`im871a[12345678]:c1` `im871a[11223344]:t1`
 
-You can also start the daemon with another set of config files:
-`wmbusmetersd --useconfig=/home/me/.config/wmbusmeters /tmp/thepidfile`
+#### software defined radio devices
+You can also specify rtlwmbus and if you set the serial in the rtlsdr
+dongle using `rtl_eeprom -s 1234` you can also refer to a specific
+rtlsdr dongle like this `rtlwmbus[1234]`.
+
+`/dev/ttyUSB0:amb8465`, if you have an amb8465(metis) dongle assigned to ttyUSB0. Other suffixes are im871a,cul.
+
+`/dev/ttyUSB0:38400`, to have wmbusmeters set the baud rate to 38400 and listen for raw wmbus telegrams.
+These telegrams are expected to have the data link layer crc bytes removed already!
+
+`MAIN=/dev/ttyUSB0:mbus:2400`, assume ttyUSB0 is an serial to mbus-master converter.  The speed is set to 2400 bps.
+
+`rtlwmbus`, to spawn the background process: `rtl_sdr -f 868.625M -s 1600000 - 2>/dev/null | rtl_wmbus -f -s`
+for each attached rtlsdr dongle. This will listen to S1,T1 and C1 meters in parallel.
+
+For the moment, it is necessary to send the stderr to a file (/dev/null) because of a bug:
+https://github.com/osmocom/rtl-sdr/commit/142325a93c6ad70f851f43434acfdf75e12dfe03
+
+Until this bug fix has propagated into Debian/Fedora etc, wmbusmeters uses a tmp file
+to see the stderr output from rtl_sdr. This tmp file is created in /tmp and will
+generate 420 bytes of data once ever 23 hours.
+
+The current command line used by wmbusmeters to start the rtl_wmbus pipeline is therefore a bit longer:
+```
+ERRFILE=$(mktemp --suffix=_wmbusmeters_rtlsdr) ;
+echo ERRFILE=$ERRFILE ;  date -Iseconds > $ERRFILE ;
+tail -f $ERRFILE & /usr/bin/rtl_sdr  -d 0 -f 868.625M -s 1.6e6 - 2>>$ERRFILE | /usr/bin/rtl_wmbus -s -f
+```
+
+Note that the standard -s option uses a noticeable amount of CPU time by rtl_wmbus.
+You can therefore use a tailored rtl_wmbus command that is more suitable for your needs.
+
+`rtlwmbus:CMD(<command line>)`, to specify the entire background
+process command line that is expected to produce rtlwmbus compatible
+output.
+The command line cannot contain parentheses.
+Likewise for rtl433.
+
+Here is an example command line that reduces the rtl_wmbus CPU usage if you only need T1/C1 telegrams.
+It disable S1 decoding (`-p s`) and trades lower cpu usage for reception performance (`-a`).
+You should always add the `-f` option to enable detection if rtl_sdr has stalled:
+
+`rtlwmbus:CMD(rtl_sdr -f 868.95M -s 1600000 - 2>/dev/null | rtl_wmbus -p s -a -f)`
+
+`rtlwmbus(ppm=17)`, to tune your rtlsdr dongle accordingly.
+Use this to tune your dongle and at the same time listen to S1,T1 and C1.
+
+`rtlwmbus:433M`, to tune to this fq instead.
+This will listen to exactly to what is on this frequency.
+
+`rtl433`, to spawn the background process: `rtl_433 -F csv -f 868.95M`
+
+`rtl433(ppm=17)`, to tune your rtlsdr dongle accordingly.
+
+`rtl433:433M`, to tune to this fq instead.
+
+`stdin:rawtty`, to read raw binary telegrams from stdin.
+These telegrams are expected to have the data link layer crc bytes removed already!
+
+`telegrams.bin:rawtty`, to read raw wmbus telegrams from this file.
+These telegrams are expected to have the data link layer crc bytes removed already!
+
+`stdin:hex`, to read hex characters wmbus telegrams from stdin.
+These telegrams are expected to have the data link layer crc bytes removed already!
+
+`telegrams.txt:hex`, to read hex characters wmbus telegrams from this file.
+These telegrams are expected to have the data link layer crc bytes removed already!
+
+`stdin:rtlwmbus`, to read telegrams formatted using the rtlwmbus format from stdin. Works for rtl433 as well.
+
+`telegrams.msg:rtlwmbus`, to read rtlwmbus formatted telegrams from this file. Works for rtl433 as well.
+
+`simulation_abc.txt`, to read telegrams from the file (the file must have a name beginning with simulation_....)
+expecting the same format that is the output from `--logtelegrams`. This format also supports replay with timing.
+The telegrams are allowed to have valid dll crcs, which will be automatically stripped.
+
+## How to specify meters and related encryption keys
+As meter quadruples you specify:
+
+* `<meter_name>`: a mnemonic for this particular meter (!Must not contain a colon ':' character!)
+* `<meter_driver>`: use `auto` or one of the supported meters (can be suffixed with: `:<bus_alias>` for selecting which bus where we should send the poll requests  `:<mode>` to specify which mode you expect the meter to use when transmitting)
+* `<meter_id>`: an 8 digit mbus id, usually printed on the meter
+* `<meter_key>`: an encryption key unique for the meter
+  if the meter uses no encryption, then supply `NOKEY`
+
+### Bus aliases and polling
+
+To poll an C2/T2/S2 wireless meter or an wired m-bus meter you need to give the (w)mbus device a bus-alias, for example
+here we pick the bus alias MAIN for the mbus using 2400 bps for all meters on this bus.
+```
+MAIN=/dev/ttyUSB0:mbus:2400
+```
+and here we pick the bus alias RADIOMAIN for an im871a dongle:
+```
+RADIOMAIN=/dev/ttyUSB1:im871a:c2
+```
+
+The bus alias is then used in the meter driver specification to specify which
+bus the mbus poll request should be sent to.
+```
+wmbusmeters --pollinterval=60s MAIN=/dev/ttyUSB0:mbus:2400 MyTempMeter piigth:MAIN:mbus 12001932 NOKEY
+```
+
+If you want to poll an mbus meter using the primary address, use p0 to p250 (deciman numbers)
+instead of the full 8 digit secondary address.
+```
+wmbusmeters --pollinterval=60s MAIN=/dev/ttyUSB0:mbus:2400 MyTempMeter piigth:MAIN:mbus p0 NOKEY
+```
+
+
+## Running with config file
+
+Check the contents of your `/etc/wmbusmeters.conf` file, assuming it
+has `device=auto:t1` and you are using a im871a,amb8465(metis),amb3665,rc1180,cul or rtlsdr device,
+then you can now start the daemon with `sudo systemctl start wmbusmeters`
+or you can try it from the command line `wmbusmeters auto:t1`
+
+When wmbusmeters is running as a deamon, you can trigger a reload of the config files with `sudo killall -HUP wmbusmetersd`
 
 When using useconfig, the files/dir should be:
 `/home/me/.config/wmbusmeters/wmbusmeters.conf` and the meters dir:
@@ -139,31 +337,8 @@ device=/dev/ttyUSB0:im871a[00102759]:c1,t1
 device=/dev/ttyUSB1:rc1180:t1
 ```
 
-# Bus aliases and polling
 
-To poll an C2/T2/S2 wireless meter or an wired m-bus meter you need to give the (w)mbus device a bus-alias, for example
-here we pick the bus alias MAIN for the mbus using 2400 bps for all meters on this bus.
-```
-MAIN=/dev/ttyUSB0:mbus:2400
-```
-and here we pick the bus alias RADIOMAIN for an im871a dongle:
-```
-RADIOMAIN=/dev/ttyUSB1:im871a:c2
-```
-
-The bus alias is then used in the meter driver specification to specify which
-bus the mbus poll request should be sent to.
-```
-wmbusmeters --pollinterval=60s MAIN=/dev/ttyUSB0:mbus:2400 MyTempMeter piigth:MAIN:mbus 12001932 NOKEY
-```
-
-If you want to poll an mbus meter using the primary address, use p0 to p250 (deciman numbers)
-instead of the full 8 digit secondary address.
-```
-wmbusmeters --pollinterval=60s MAIN=/dev/ttyUSB0:mbus:2400 MyTempMeter piigth:MAIN:mbus p0 NOKEY
-```
-
-# Example wmbusmeter.conf file
+### Example wmbusmeter.conf file
 
 ```ini
 loglevel=normal
@@ -427,170 +602,9 @@ When running using config files then you can trigger a reload of the config file
 using `sudo killall -HUP wmbusmetersd` or `killall -HUP wmbusmeters`
 depending on if you are running as a daemon or not.
 
-# Running without config files, good for experimentation and test.
+# Supported wmbus dongles
 
 ```
-wmbusmeters version: 1.15.0
-Usage: wmbusmeters {options} [device] { [meter_name] [meter_driver] [meter_id] [meter_key] }*
-       wmbusmeters {options} [hex]    { [meter_name] [meter_driver] [meter_id] [meter_key] }*
-       wmbusmetersd {options} [pid_file]
-
-As {options} you can use:
-
-    --alarmexpectedactivity=mon-fri(08-17),sat-sun(09-12) Specify when the timeout is tested, default is mon-sun(00-23)
-    --alarmshell=<cmdline> invokes cmdline when an alarm triggers
-    --alarmtimeout=<time> Expect a telegram to arrive within <time> seconds, eg 60s, 60m, 24h during expected activity.
-    --analyze Analyze a telegram to find the best driver.
-    --analyze=<key> Analyze a telegram to find the best driver use the provided decryption key.
-    --analyze=<driver> Analyze a telegram and use only this driver.
-    --analyze=<driver>:<key> Analyze a telegram and use only this driver with this key.
-    --calculate_field_unit='...' Add field_unit to the json and calculate it using the formula. E.g.
-    --calculate_sumtemp_c='external_temperature_c+flow_temperature_c'
-    --calculate_flow_f=flow_temperature_c
-    --debug for a lot of information
-    --donotprobe=<tty> do not auto-probe this tty. Use multiple times for several ttys or specify "all" for all ttys.
-    --driver=<file> load a driver
-    --driversdir=<dir> load all drivers in dir
-    --exitafter=<time> exit program after time, eg 20h, 10m 5s
-    --format=<hr/json/fields> for human readable, json or semicolon separated fields
-    --help list all options
-    --identitymode=(id|id-mfct|full|none) group meter state based on the identity mode. Default is id.
-    --ignoreduplicates=<bool> ignore duplicate telegrams, remember the last 10 telegrams
-    --field_xxx=yyy always add "xxx"="yyy" to the json output and add shell env METER_xxx=yyy (--json_xxx=yyy also works)
-    --license print GPLv3+ license
-    --listento=<mode> listen to one of the c1,t1,s1,s1m,n1a-n1f link modes
-    --listento=<mode>,<mode> listen to more than one link mode at the same time, assuming the dongle supports it
-    --listenvs=<meter_driver> list the env variables available for the given meter driver
-    --listfields=<meter_driver> list the fields selectable for the given meter driver
-    --listmeters list all meter drivers
-    --listmeters=<search> list all meter drivers containing the text <search>
-    --listunits list all unit suffixes that can be used for typing values
-    --logfile=<file> use this file for logging or --logfile=syslog
-    --logtelegrams log the contents of the telegrams for easy replay
-    --logtimestamps=<when> add log timestamps: always never important
-    --meterfiles=<dir> store meter readings in dir
-    --meterfilesaction=(overwrite|append) overwrite or append to the meter readings file
-    --meterfilesnaming=(name|id|name-id) the meter file is the meter's: name, id or name-id
-    --meterfilestimestamp=(never|day|hour|minute|micros) the meter file is suffixed with a
-                          timestamp (localtime) with the given resolution.
-    --metershell=<cmdline> invokes cmdline with env variables the first time a meter is seen since startup
-    --nodeviceexit if no wmbus devices are found, then exit immediately
-    --normal for normal logging
-    --oneshot wait for an update from each meter, then quit
-    --overridedevice=<device> override device in config files. Use only in combination with --useconfig= option
-    --ppjson pretty print the json
-    --pollinterval=<time> time between polling of meters, must be set to get polling.
-    --resetafter=<time> reset the wmbus dongle regularly, default is 23h
-    --selectfields=id,timestamp,total_m3 select only these fields to be printed (--listfields=<meter> to list available fields)
-    --separator=<c> change field separator to c
-    --shell=<cmdline> invokes cmdline with env variables containing the latest reading
-    --silent do not print informational messages nor warnings
-    --trace for tons of information
-    --useconfig=<dir> load config <dir>/wmbusmeters.conf and meters from <dir>/wmbusmeters.d
-    --usestderr write notices/debug/verbose and other logging output to stderr (the default)
-    --usestdoutforlogging write debug/verbose and logging output to stdout
-    --verbose for more information
-    --version print version
-```
-
-As device you can use:
-
-`auto:c1`, to have wmbusmeters probe for devices: im871a, amb8465(metis), amb3665, cul, rc1180 or rtlsdr (spawns rtlwmbus).
-
-`im871a:c1` to start all connected *im871a* devices in *c1* mode, ignore all other devices.
-
-`/dev/ttyUSB1:amb8465:c1` to start only this device on this tty. Do not probe for other devices.
-
-If you have two im871a you can supply both of them with their unique id:s and set different listening modes:
-`im871a[12345678]:c1` `im871a[11223344]:t1`
-
-You can also specify rtlwmbus and if you set the serial in the rtlsdr
-dongle using `rtl_eeprom -s 1234` you can also refer to a specific
-rtlsdr dongle like this `rtlwmbus[1234]`.
-
-`/dev/ttyUSB0:amb8465`, if you have an amb8465(metis) dongle assigned to ttyUSB0. Other suffixes are im871a,cul.
-
-(Note that a plain `/dev/ttyUSB0` no longer works, you have to specify the device expected on the device.)
-
-`/dev/ttyUSB0:38400`, to have wmbusmeters set the baud rate to 38400 and listen for raw wmbus telegrams.
-These telegrams are expected to have the data link layer crc bytes removed already!
-
-`MAIN=/dev/ttyUSB0:mbus:2400`, assume ttyUSB0 is an serial to mbus-master converter.  The speed is set to 2400 bps.
-
-`rtlwmbus`, to spawn the background process: `rtl_sdr -f 868.625M -s 1600000 - 2>/dev/null | rtl_wmbus -f -s`
-for each attached rtlsdr dongle. This will listen to S1,T1 and C1 meters in parallel.
-
-For the moment, it is necessary to send the stderr to a file (/dev/null) because of a bug:
-https://github.com/osmocom/rtl-sdr/commit/142325a93c6ad70f851f43434acfdf75e12dfe03
-
-Until this bug fix has propagated into Debian/Fedora etc, wmbusmeters uses a tmp file
-to see the stderr output from rtl_sdr. This tmp file is created in /tmp and will
-generate 420 bytes of data once ever 23 hours.
-
-The current command line used by wmbusmeters to start the rtl_wmbus pipeline is therefore a bit longer:
-```
-ERRFILE=$(mktemp --suffix=_wmbusmeters_rtlsdr) ;
-echo ERRFILE=$ERRFILE ;  date -Iseconds > $ERRFILE ;
-tail -f $ERRFILE & /usr/bin/rtl_sdr  -d 0 -f 868.625M -s 1.6e6 - 2>>$ERRFILE | /usr/bin/rtl_wmbus -s -f
-```
-
-Note that the standard -s option uses a noticeable amount of CPU time by rtl_wmbus.
-You can therefore use a tailored rtl_wmbus command that is more suitable for your needs.
-
-`rtlwmbus:CMD(<command line>)`, to specify the entire background
-process command line that is expected to produce rtlwmbus compatible
-output.
-The command line cannot contain parentheses.
-Likewise for rtl433.
-
-Here is an example command line that reduces the rtl_wmbus CPU usage if you only need T1/C1 telegrams.
-It disable S1 decoding (`-p s`) and trades lower cpu usage for reception performance (`-a`).
-You should always add the `-f` option to enable detection if rtl_sdr has stalled:
-
-`rtlwmbus:CMD(rtl_sdr -f 868.95M -s 1600000 - 2>/dev/null | rtl_wmbus -p s -a -f)`
-
-`rtlwmbus(ppm=17)`, to tune your rtlsdr dongle accordingly.
-Use this to tune your dongle and at the same time listen to S1,T1 and C1.
-
-`rtlwmbus:433M`, to tune to this fq instead.
-This will listen to exactly to what is on this frequency.
-
-`rtl433`, to spawn the background process: `rtl_433 -F csv -f 868.95M`
-
-`rtl433(ppm=17)`, to tune your rtlsdr dongle accordingly.
-
-`rtl433:433M`, to tune to this fq instead.
-
-`stdin:rawtty`, to read raw binary telegrams from stdin.
-These telegrams are expected to have the data link layer crc bytes removed already!
-
-`telegrams.bin:rawtty`, to read raw wmbus telegrams from this file.
-These telegrams are expected to have the data link layer crc bytes removed already!
-
-`stdin:hex`, to read hex characters wmbus telegrams from stdin.
-These telegrams are expected to have the data link layer crc bytes removed already!
-
-`telegrams.txt:hex`, to read hex characters wmbus telegrams from this file.
-These telegrams are expected to have the data link layer crc bytes removed already!
-
-`stdin:rtlwmbus`, to read telegrams formatted using the rtlwmbus format from stdin. Works for rtl433 as well.
-
-`telegrams.msg:rtlwmbus`, to read rtlwmbus formatted telegrams from this file. Works for rtl433 as well.
-
-`simulation_abc.txt`, to read telegrams from the file (the file must have a name beginning with simulation_....)
-expecting the same format that is the output from `--logtelegrams`. This format also supports replay with timing.
-The telegrams are allowed to have valid dll crcs, which will be automatically stripped.
-
-As meter quadruples you specify:
-
-* `<meter_name>`: a mnemonic for this particular meter (!Must not contain a colon ':' character!)
-* `<meter_driver>`: use `auto` or one of the supported meters (can be suffixed with: `:<bus_alias>` for selecting which bus where we should send the poll requests  `:<mode>` to specify which mode you expect the meter to use when transmitting)
-* `<meter_id>`: an 8 digit mbus id, usually printed on the meter
-* `<meter_key>`: an encryption key unique for the meter
-  if the meter uses no encryption, then supply `NOKEY`
-
-```
-Supported wmbus dongles:
 IMST 871a (im871a)
 Amber 8465-M/8665-M/8626-M/Metis-II (amb8465) 868MHz
 Amber 3665-M (amb3665) 169MHz
